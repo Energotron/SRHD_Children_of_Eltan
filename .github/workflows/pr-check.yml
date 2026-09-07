@@ -1,4 +1,4 @@
-name: PR Check
+name: Children of Eltan Mod Check
 
 on:
   pull_request:
@@ -14,38 +14,49 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Validate project structure and data
+      - name: Validate canonical mod project structure
         shell: bash
         run: |
           set -euo pipefail
           test -f README.md
           test -f docs/AGENT_DEVELOPMENT_LOOP.md
           test -f docs/PROJECT_CONSTITUTION.md
+          test -f docs/MOD_ARCHITECTURE.md
+          test -f docs/MODDING_CAPABILITY_MATRIX.md
           test -f docs/ROADMAP.md
-          test -f game/webgl/index.html
-          test -f game/webgl/js/main.js
-          test -f game/webgl/package.json
-          python3 -m json.tool data/diplomacy_rules.json >/dev/null
-          python3 -m json.tool game/webgl/manifest.json >/dev/null
+          test -f mod/README.md
+          test -f mod/project.json
+          test -f .github/project-mode.json
+          test -f .github/release-decision.json
 
-      - name: Install WebGL dependencies
-        run: npm install --prefix game/webgl --no-audit --no-fund --package-lock=false
-
-      - name: Run gameplay tests
-        run: npm test --prefix game/webgl
-
-      - name: Check JavaScript syntax
+      - name: Validate repository metadata
         shell: bash
         run: |
           set -euo pipefail
-          while IFS= read -r -d '' file; do
-            node --check "$file"
-          done < <(find game/webgl/src game/webgl/js -type f -name '*.js' -print0)
+          python3 -m json.tool mod/project.json >/dev/null
+          python3 -m json.tool .github/project-mode.json >/dev/null
+          python3 -m json.tool .github/release-decision.json >/dev/null
+          python3 - <<'PY'
+          import json
+          mode = json.load(open('.github/project-mode.json', encoding='utf-8'))
+          project = json.load(open('mod/project.json', encoding='utf-8'))
+          release = json.load(open('.github/release-decision.json', encoding='utf-8'))
 
-      - name: Build production WebGL bundle
-        run: npm run build --prefix game/webgl
+          if mode.get('project_type') != 'space-rangers-2-mod':
+              raise SystemExit('project mode must remain space-rangers-2-mod')
+          if mode.get('canonical_mod_root') != 'mod/':
+              raise SystemExit('canonical mod root must remain mod/')
+          if project.get('native_game_format') is not False:
+              raise SystemExit('internal project metadata must not masquerade as a native KR2 manifest')
+          if release.get('release') is not False:
+              raise SystemExit('release promotion must stay frozen until the KR2 mod toolchain is verified')
+          PY
+
+      - name: Reject accidental standalone-first regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -qi 'мод' README.md
+          grep -qi 'game/webgl.*legacy\|legacy.*game/webgl' README.md
+          grep -qi 'Space Rangers 2\|Космических рейнджеров 2' docs/MOD_ARCHITECTURE.md
+          echo 'Canonical PR gate is mod-first; legacy WebGL is not a required release runtime.'

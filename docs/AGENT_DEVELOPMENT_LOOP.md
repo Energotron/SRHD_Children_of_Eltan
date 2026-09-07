@@ -1,33 +1,64 @@
-# Agent Development Loop
+# Agent Development Loop — Children of Eltan
 
 ## Purpose
 
-Bootstrap a repeatable development loop for **Космические Рейнджеры 3: Дети Эльтана**.
+Develop **«Дети Эльтана»** as a mod for **Космические Рейнджеры 2 / Space Rangers HD**, not as a standalone replacement engine.
 
-## Current iteration
+## Canonical loop
 
-1. Inspect repository state and existing design.
-2. Convert the highest-value game-design requirement into a small, testable artifact.
-3. Implement one vertical slice rather than expanding scope broadly.
-4. Review the change for consistency with the README architecture.
-5. Commit the iteration separately so progress remains reversible.
+`inspect master -> verify modding capability -> choose one mod-first increment -> implement -> validate/package -> commit -> handoff`
 
-## First vertical slice target
+## Required reading
 
-Implement the foundations of **Smart Diplomacy** as deterministic data and rules before connecting it to UI or combat.
+1. `README.md`
+2. `docs/MOD_ARCHITECTURE.md`
+3. `docs/ROADMAP.md`
+4. latest `master` commits
+5. current modding research / compatibility docs
+6. relevant lore, quest and design documents
 
-### Minimal model
+## Priority order
 
-- factions have diplomatic attitudes;
-- relationships are represented numerically;
-- actions modify relationships through explicit rules;
-- outcomes remain deterministic for identical inputs;
-- the model can later feed the Alliance Grid and quest systems.
+1. establish or repair the actual KR2/SRHD mod toolchain;
+2. fix reproducible packaging/install/compatibility failures;
+3. complete unfinished mod content already present in `master`;
+4. add one high-value original quest/content/system extension supported by the confirmed modding path;
+5. improve tooling, validation and documentation that directly supports the mod.
 
-## Agent loop
+## Capability rule
 
-`inspect -> design -> implement -> review -> test -> commit -> next iteration`
+Before coding a feature, classify its implementation path as:
 
-## Constraint
+- native reuse;
+- supported extension;
+- tool-assisted extension;
+- unverified;
+- unsupported.
 
-Do not introduce a full online architecture while the solo gameplay foundation is still undefined. Prefer small, composable systems that can later be reused by the Galactic Network.
+Do not implement an unverified capability as though it were supported. Research it first.
+
+## Legacy WebGL rule
+
+`game/webgl/` is a legacy prototype/mechanics lab. It is not the shipping runtime.
+
+Do not add a new standalone WebGL feature merely because it is easier than implementing the real mod feature. Use WebGL only for preservation, extracting existing design logic, or narrowly scoped prototyping that directly informs the mod.
+
+## One-run contract
+
+One autonomous pass must produce at most one small coherent increment. Examples:
+
+- document one verified mod format;
+- add one validator;
+- create one minimal mod package component;
+- implement one original quest/event;
+- fix one packaging/compatibility bug.
+
+Run the relevant checks before committing directly to `master`. Never create parallel branches unless explicitly requested.
+
+## Legal/provenance constraint
+
+Never commit proprietary base-game binaries/assets or third-party mod material without verified permission/license. Prefer original content and transformation/build tooling that operates against a legally installed copy of the game.
+
+## Current target
+
+Complete **M1 Modding Capability Audit**, then build the smallest installable `Children of Eltan` mod skeleton.

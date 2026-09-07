@@ -1,0 +1,18 @@
+{
+  "project_name": "Дети Эльтана",
+  "project_name_en": "Children of Eltan",
+  "project_type": "space-rangers-2-mod",
+  "base_game": "Space Rangers 2 / Space Rangers HD: A War Apart",
+  "canonical_branch": "master",
+  "canonical_mod_root": "mod/",
+  "data_root": "data/",
+  "quests_root": "quests/",
+  "legacy_prototype_root": "game/webgl/",
+  "legacy_prototype_status": "reference-only",
+  "standalone_webgl_release": false,
+  "android_apk_release": false,
+  "release_status": "migration-toolchain-unverified",
+  "technical_source_of_truth": "docs/MOD_ARCHITECTURE.md",
+  "roadmap": "docs/ROADMAP.md",
+  "constitution_amendment": "docs/PROJECT_CONSTITUTION_MOD_AMENDMENT.md"
+}

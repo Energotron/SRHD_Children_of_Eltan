@@ -1,14 +1,13 @@
 {
-  "release": true,
-  "tag": "v0.4.2-alpha",
-  "title": "Космические Рейнджеры 3: Дети Эльтана",
+  "release": false,
+  "tag": null,
+  "title": "Дети Эльтана",
   "prerelease": true,
-  "reason": "Post-hotfix Android release with restored menu visuals, local anthem, save recovery, and mobile UI fixes.",
+  "reason": "Project migrated from standalone KR3 WebGL/APK development to a Space Rangers 2 / Space Rangers HD mod. Standalone release promotion is frozen until the KR2 mod toolchain, package layout, install path and smoke-test process are verified.",
   "notes": [
-    "Restored the full KR3 stylesheet after the menu background regression.",
-    "Added the local main-menu background asset and KR3 icon.",
-    "Integrated the local 'За краем орбит' menu anthem and first-launch playback fixes.",
-    "Added in-flight save slots and runtime recovery.",
-    "Split space controls into two-row zones for better mobile usability."
+    "Canonical product is now the KR2/SRHD mod 'Дети Эльтана'.",
+    "game/webgl is retained as a legacy prototype/reference only.",
+    "Do not publish APK or standalone WebGL builds as current Children of Eltan releases.",
+    "Next releasable artifact must be a legally clean mod package produced by a verified KR2 modding pipeline."
   ]
 }

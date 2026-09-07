@@ -159,3 +159,53 @@ test('autostart consumer ignores unrelated query parameters', () => {
   const win = { location: { href: 'https://example.test/game/webgl/?qa=touch', search: '?qa=touch' } };
   assert.equal(consumeAutostartRequest(win), false);
 });
+
+// Model the production slot mirror, including its write-only backup behavior.
+function mirroredStorage(initial) {
+  const storage = memoryStorage(initial);
+  const setItem = storage.setItem;
+  storage.setItem = (key, value) => {
+    setItem(key, value);
+    const slot = Number(storage.getItem('kr3_active_save_slot')) || 0;
+    if (key === 'kr3_save_slot0') setItem(slot ? `kr3_save_slot${slot}` : 'kr3_save_slot0_primary', value);
+    if (key === 'kr3_save_meta') setItem(slot ? `kr3_save_meta_slot${slot}` : 'kr3_save_meta_slot0_primary', value);
+  };
+  return storage;
+}
+
+for (const slot of [0, 2]) {
+  for (const occupied of [false, true]) {
+    for (const outcome of ['success', 'throw-save', 'throw-load', 'false-load']) {
+      test(`new-game rollback preserves mirrored slot ${slot}, occupied=${occupied}, ${outcome}`, () => {
+        const keys = ['kr3_save_slot0', 'kr3_save_meta', 'kr3_save_slot2', 'kr3_save_meta_slot2',
+          'kr3_save_slot0_primary', 'kr3_save_meta_slot0_primary'];
+        const initial = { kr3_active_save_slot: String(slot) };
+        if (occupied) {
+          for (const key of keys) initial[key] = JSON.stringify({ original: key });
+        }
+        const storage = mirroredStorage(initial);
+        const win = { localStorage: storage, document: { getElementById() { return null; } } };
+        const originals = {
+          startNewGame() {},
+          saveGame() {
+            storage.setItem('kr3_save_slot0', JSON.stringify({ G: { date: { year: 3500, month: 1, day: 1 } }, P: {} }));
+            storage.setItem('kr3_save_meta', JSON.stringify({ dateStr: '01.01.3500' }));
+            if (outcome === 'throw-save') throw new Error('save interrupted');
+          },
+          loadGame() {
+            assert.equal(JSON.parse(storage.getItem('kr3_save_slot0')).G.date.year, 3550);
+            if (outcome === 'throw-load') throw new Error('load interrupted');
+            return outcome !== 'false-load';
+          },
+        };
+        if (outcome.startsWith('throw')) {
+          assert.throws(() => runCanonicalNewGame(win, originals), /interrupted/);
+        } else {
+          assert.equal(runCanonicalNewGame(win, originals), outcome === 'success');
+        }
+        for (const key of keys) assert.equal(storage.getItem(key), initial[key] ?? null, key);
+        assert.equal(storage.getItem('kr3_active_save_slot'), String(slot));
+      });
+    }
+  }
+}

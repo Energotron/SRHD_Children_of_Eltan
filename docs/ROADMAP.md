@@ -176,3 +176,10 @@ ChatGPT, Wingman и другие агенты считаются равнопр�
 - reward-based ads only where they do not destroy pacing;
 - cosmetics, convenience, light resource boosts допустимы;
 - solo campaign должна оставаться полноценной без доната.
+
+### Save continuity fix — 2026-09-07
+
+- New-game calendar conversion now restores temporary save data in `finally`, including the primary-slot mirror backups. Empty slots remain empty; existing slots survive exceptions during temporary save/load.
+- A failed temporary load returns failure without clearing its error toast.
+- Validation: 245 Node tests pass, including 16 mirrored-slot rollback cases; Vite production build and changed-JavaScript syntax checks pass. Device/APK behavior was not tested in this pass.
+- Next: exercise the complete new-game / save / slot-switch / continue flow in the Android WebView.

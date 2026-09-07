@@ -189,15 +189,23 @@ export function runCanonicalNewGame(win, originals, profileSelection = {}) {
   if (!storage || typeof originals?.startNewGame !== 'function' || typeof originals?.saveGame !== 'function' || typeof originals?.loadGame !== 'function') return false;
 
   const slot = currentSlot(storage);
-  const keys = new Set(['kr3_save_slot0', 'kr3_save_meta', saveKey(slot), metaKey(slot)]);
+  // The slot runtime mirrors writes into these backups, even for an empty slot.
+  // Restore mirror targets last so restoring legacy keys cannot overwrite them.
+  const keys = new Set(['kr3_save_slot0', 'kr3_save_meta', saveKey(slot), metaKey(slot),
+    'kr3_save_slot0_primary', 'kr3_save_meta_slot0_primary']);
   const snapshot = snapshotKeys(storage, keys);
 
-  originals.startNewGame(profileSelection);
-  originals.saveGame(0);
-  migrateSlot(storage, 0);
-  originals.loadGame(0);
-  restoreKeys(storage, snapshot);
-  refreshContinueLabel(win);
+  let loaded;
+  try {
+    originals.startNewGame(profileSelection);
+    originals.saveGame(0);
+    migrateSlot(storage, 0);
+    loaded = originals.loadGame(0);
+  } finally {
+    restoreKeys(storage, snapshot);
+    refreshContinueLabel(win);
+  }
+  if (loaded === false) return false;
 
   const toasts = win.document?.getElementById?.('toasts');
   if (toasts) toasts.innerHTML = '';

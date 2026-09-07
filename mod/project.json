@@ -1,0 +1,11 @@
+{
+  "project": "Дети Эльтана",
+  "project_en": "Children of Eltan",
+  "type": "sr2-mod-project-source",
+  "base_game": "Space Rangers 2 / Space Rangers HD: A War Apart",
+  "canonical_branch": "master",
+  "status": "modding-toolchain-audit",
+  "release_artifact": "unverified",
+  "native_game_format": false,
+  "notes": "Repository-internal metadata only. This file is not claimed to be a native KR2/SRHD mod manifest."
+}

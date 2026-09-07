@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { normalizeSlot, saveKey, metaKey, formatSlotMeta, slotHasSave, syncSelectedSlotToLegacy, activateSlotForLoad, ACTIVE_SLOT_KEY, LEGACY_SAVE_KEY, LEGACY_META_KEY, PRIMARY_SLOT_BACKUP_KEY, PRIMARY_META_BACKUP_KEY } from '../src/saveSlotsRuntime.js';
+import { runCanonicalLoad } from '../src/campaignDateRuntime.js';
 
 function memoryStorage(entries = []) {
   const values = new Map(entries);
@@ -126,6 +127,41 @@ test('loading an extra slot preserves independent slot zero and restores it late
   assert.equal(storage.getItem(PRIMARY_META_BACKUP_KEY), slotZeroMeta);
   assert.equal(storage.getItem(LEGACY_SAVE_KEY), slotTwoSave);
   assert.equal(slotHasSave(0, storage), true);
+
+  assert.equal(activateSlotForLoad(0, storage), true);
+  assert.equal(storage.getItem(ACTIVE_SLOT_KEY), '0');
+  assert.equal(storage.getItem(LEGACY_SAVE_KEY), slotZeroSave);
+  assert.equal(storage.getItem(LEGACY_META_KEY), slotZeroMeta);
+});
+
+test('slot switch survives the campaign-date continue bridge and restores slot zero', () => {
+  const slotZeroSave = JSON.stringify({ dateStr: '05.03.3554', G: { date: { year: 3554, month: 3, day: 5 } }, P: { slot: 0 } });
+  const slotZeroMeta = JSON.stringify({ dateStr: '05.03.3554', sys: 'Солнце' });
+  const slotTwoSave = JSON.stringify({ dateStr: '09.02.3501', G: { date: { year: 3501, month: 2, day: 9 } }, P: { slot: 2 } });
+  const slotTwoMeta = JSON.stringify({ dateStr: '09.02.3501', sys: 'Вега' });
+  const storage = memoryStorage([
+    [ACTIVE_SLOT_KEY, '0'],
+    [LEGACY_SAVE_KEY, slotZeroSave],
+    [LEGACY_META_KEY, slotZeroMeta],
+    [saveKey(2), slotTwoSave],
+    [metaKey(2), slotTwoMeta]
+  ]);
+  let loaded = null;
+  const win = { localStorage: storage };
+  const originals = {
+    loadGame(slot) {
+      loaded = { slot, save: JSON.parse(storage.getItem(LEGACY_SAVE_KEY)) };
+      return true;
+    }
+  };
+
+  assert.equal(activateSlotForLoad(2, storage), true);
+  assert.equal(runCanonicalLoad(win, originals), true);
+  assert.equal(loaded.slot, 0);
+  assert.equal(loaded.save.P.slot, 2);
+  assert.equal(loaded.save.G.date.year, 3551);
+  assert.equal(JSON.parse(storage.getItem(saveKey(2))).G.date.year, 3551);
+  assert.equal(JSON.parse(storage.getItem(metaKey(2))).dateStr, '09.02.3551');
 
   assert.equal(activateSlotForLoad(0, storage), true);
   assert.equal(storage.getItem(ACTIVE_SLOT_KEY), '0');

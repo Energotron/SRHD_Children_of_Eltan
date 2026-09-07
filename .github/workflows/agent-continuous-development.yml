@@ -1,4 +1,4 @@
-name: KR3 Runtime Health
+name: Children of Eltan Mod Health
 
 on:
   schedule:
@@ -17,32 +17,40 @@ jobs:
         with:
           ref: master
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Validate runtime and data
+      - name: Validate canonical mod state
         shell: bash
         run: |
           set -euo pipefail
-          test -s game/webgl/index.html
-          test -s game/webgl/js/main.js
-          test -s game/webgl/js/WebGLRenderer.js
-          python3 -m json.tool data/diplomacy_rules.json >/dev/null
-          python3 -m json.tool game/webgl/manifest.json >/dev/null
-          for track in flight fighter human gaal fei quasar peleng maloc; do
-            test -s "game/webgl/music/${track}.mp3"
-          done
+          test -s README.md
+          test -s docs/MOD_ARCHITECTURE.md
+          test -s docs/MODDING_CAPABILITY_MATRIX.md
+          test -s docs/ROADMAP.md
+          test -s docs/AGENT_DEVELOPMENT_LOOP.md
+          test -s mod/README.md
+          test -s mod/project.json
+          test -s .github/project-mode.json
+          test -s .github/release-decision.json
+          python3 -m json.tool mod/project.json >/dev/null
+          python3 -m json.tool .github/project-mode.json >/dev/null
+          python3 -m json.tool .github/release-decision.json >/dev/null
 
-      - name: Install WebGL dependencies
-        run: npm install --prefix game/webgl --no-audit --no-fund --package-lock=false
-
-      - name: Run gameplay tests
-        run: npm test --prefix game/webgl
-
-      - name: Build production WebGL bundle
-        run: npm run build --prefix game/webgl
+      - name: Enforce mod-first project mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          mode = json.load(open('.github/project-mode.json', encoding='utf-8'))
+          release = json.load(open('.github/release-decision.json', encoding='utf-8'))
+          assert mode['project_name'] == 'Дети Эльтана'
+          assert mode['project_type'] == 'space-rangers-2-mod'
+          assert mode['canonical_branch'] == 'master'
+          assert mode['canonical_mod_root'] == 'mod/'
+          assert mode['legacy_prototype_status'] == 'reference-only'
+          assert mode['standalone_webgl_release'] is False
+          assert mode['android_apk_release'] is False
+          assert release['release'] is False
+          PY
 
       - name: Check repository stayed clean
         shell: bash

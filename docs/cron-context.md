@@ -9,35 +9,30 @@ Updated: 2026-09-07
 - Canonical mod work: `mod/`, `data/`, `quests/`, mod tooling and current mod architecture docs.
 - `game/webgl/` is legacy/reference only and is no longer the shipping runtime.
 - Standalone WebGL/APK release promotion is frozen.
-- Restored master before this increment: `69e0a7b71361017d56e5dc9b7b29d2624bf3856c`.
-- Current increment content commit: `52616271b5db324a51a4db8d8f8ad39b56452360`.
+- Restored master before this increment: `a3fc709926339c958e6c5b02e5e417eb9fdd1740`.
 
 ## Verified modding/toolchain state
 
 - `Space Rangers HD/Mods/` is confirmed as the filesystem root for user mods.
 - Real SRHD layout permits nested module directories such as `Mods/Tweaks/German/ModuleInfo.txt`; therefore the release path must not assume every module is a direct child of `Mods/`.
-- `Mods/ModCFG.txt` is confirmed as the enabled-mod/load-order configuration read by the game, but the exact minimal activation entry for a new `ChildrenOfEltan` module is still not runtime-verified in this repository.
-- `Priority` from `ModuleInfo.txt` participates in effective load order. The textual order in `ModCFG.txt` is only sufficient when relevant mods have equal Priority values.
+- **`ModCFG.txt` activation syntax is now `verified-tool-assisted`.** The MIT-licensed `ringill/spacerangers-modorganizer-plugin` source documents and implements the engine-facing contract: `Mods/ModCFG.txt` contains a `CurrentMod=` key whose value is a comma-separated, ordered list of enabled mod entries. There is no separate enabled flag in that model; membership in `CurrentMod` is the activation signal.
+- The same plugin documents `ModCFG.txt` as UTF-8 and writes entries joined as `CurrentMod=ModA, ModB, ...`, preserving unrelated lines and line endings. This is strong tool/source evidence for the activation record format, but the exact Children of Eltan category/name entry still requires a real installed-game smoke-test.
+- `Priority` from `ModuleInfo.txt` participates in effective load order. The textual order in `CurrentMod` is authoritative only when relevant enabled mods have equal Priority values; the MO2 plugin equalizes enabled mods to `Priority=1` in its VFS so the engine order follows `CurrentMod` exactly.
+- The MO2 plugin source also treats `ModuleInfo.txt` as UTF-16 with BOM and reads `SectionEng=` as the category/folder identity used for `<Category>/<Mod>` mapping. This conflicts with the current research template's ASCII-only UTF-8 plus `Section=OtherMods`, so the template must **not** be promoted to installable status until this discrepancy is resolved against real shipped modules / runtime behavior.
 - XenoModKit's parser accepts case-insensitive `ModuleInfo.txt` discovery and `key=value` descriptor lines.
-- **Static `ModuleInfo.txt` descriptor validation is `verified-tool-assisted`.** In current XenoModKit, `Name` is the only descriptor field whose absence is a validation error; `Priority`, when present, must be an integer; missing `Languages` is informational; `Section` is parser/toolchain data rather than a validator-required field.
-- XenoModKit's native-loader fixture exercises `Name`, `Section`, `Priority`, and `Languages` together, matching the current original research template.
-- XenoModKit's SRHD text lint allows `cp1251`, `utf-16-le`, and `utf-16-be` for `ModuleInfo.txt`, and explicitly accepts ASCII-only UTF-8 without BOM as byte-safe. The current template is ASCII-only, so it is statically encoding-compatible. Non-ASCII descriptor values must not be added without conversion/validation to a verified game-facing encoding.
-- This static validation does **not** promote the exact `ChildrenOfEltan` module path, `Section=OtherMods`, `Languages=Rus`, `Priority=1`, or `ModCFG.txt` activation form to `verified-moddable`; those remain runtime research items until a clean installed-game smoke-test.
+- **Static `ModuleInfo.txt` descriptor validation remains `verified-tool-assisted`.** In current XenoModKit, `Name` is the only descriptor field whose absence is a validation error; `Priority`, when present, must be an integer; missing `Languages` is informational; `Section` is parser/toolchain data rather than a validator-required field.
+- XenoModKit's SRHD text lint allows `cp1251`, `utf-16-le`, and `utf-16-be` for `ModuleInfo.txt`, and explicitly accepts ASCII-only UTF-8 without BOM as byte-safe. That static lint result does not overrule the MO2 plugin's engine-facing UTF-16/BOM expectation; runtime evidence is now required before choosing the release encoding.
 - SRHD XenoModKit remains accepted as `verified-tool-assisted` for structure/ModuleInfo audit, `ModCFG.txt` compatibility analysis, DAT, SCR/RSON/RSM, QM/QMM, GI/GAI/HAI/PKG, encoding checks and deterministic release staging.
 - **XenoNativeLoader Host API V1 is `verified-tool-assisted` as a native-extension toolchain path.** XenoModKit 0.10.2 can scaffold/build/static-validate x86 PE32 `*.XenoPlugin.dll` modules and exact ABI exports `XenoPlugin_Query` / `XenoPlugin_Initialize`.
 - Public `Xenomorphchyma/XenoMods` examples demonstrate XenoNativeLoader 0.6.7 with real SRHD native mods including `XenoBigGalaxy`, `XenoEquipmentInflation`, `XenoHangarPaging`, `XenoCoalitionSupplyLines`, and `XenoDomRangers`. The loader uses `dsound.dll`/`XenoCore.dll`, reads active `Mods/ModCFG.txt`, loads per-mod DLLs from `Native/`, and performs signature checks before hooks rather than modifying `Rangers.exe` on disk.
-- This does **not** verify any specific Children of Eltan native hook or runtime compatibility. Native plugins remain an advanced fallback only where DAT/RScript/QMM cannot provide the mechanic.
 - `Xenomorphchyma/XenoMods` reports SPDX `NOASSERTION`; use it as behavioral/architectural evidence only unless reuse permission is established. Do not copy its code/assets/content into this repository on that evidence alone.
 
 Evidence:
-- https://github.com/Xenomorphchyma/SRHD-XenoModKit/blob/master/srhd_modkit/module_info.py
-- https://github.com/Xenomorphchyma/SRHD-XenoModKit/blob/master/srhd_modkit/validation.py
-- https://github.com/Xenomorphchyma/SRHD-XenoModKit/blob/master/srhd_modkit/textio.py
-- https://github.com/Xenomorphchyma/SRHD-XenoModKit/blob/master/srhd_modkit/game_text.py
-- https://github.com/Xenomorphchyma/SRHD-XenoModKit/blob/master/tests/test_native_loader.py
-- https://github.com/Xenomorphchyma/SRHD-XenoModKit/blob/master/README_RU.md
-- https://github.com/Xenomorphchyma/XenoMods
+- https://github.com/ringill/spacerangers-modorganizer-plugin/blob/main/games/spacerangershd/modcfg.py
+- https://github.com/ringill/spacerangers-modorganizer-plugin
 - https://www.nexusmods.com/spacerangersawarapart/mods/57
+- https://github.com/Xenomorphchyma/SRHD-XenoModKit
+- https://github.com/Xenomorphchyma/XenoMods
 - https://steamdb.info/depot/214731/
 
 ## Asset pipeline state
@@ -48,32 +43,29 @@ Evidence:
 
 ## Last completed increment
 
-Verified the **static `ModuleInfo.txt` descriptor and encoding contract** against current XenoModKit source and tightened the research-template documentation:
+Verified the engine-facing **`ModCFG.txt` / `CurrentMod=` control-file contract** against the current open-source SRHD Mod Organizer 2 plugin:
 
-- confirmed `Name` as the only descriptor field whose absence is a static validation error;
-- confirmed integer validation for `Priority` and informational treatment of missing `Languages`;
-- confirmed the current four-field template remains a tool-assisted research fixture rather than runtime proof;
-- confirmed XenoModKit's explicit ASCII-only UTF-8 compatibility exception, so the current ASCII descriptor does not need a fake encoding conversion merely to pass static lint;
-- documented that any future non-ASCII descriptor values must be converted/validated to a verified SRHD game-facing encoding;
-- left the actual `ModuleInfo.txt` values unchanged and did not claim successful game loading.
-
-Content commit: `52616271b5db324a51a4db8d8f8ad39b56452360`.
+- confirmed `CurrentMod=` as the comma-separated ordered enabled-mod list;
+- confirmed no separate enable flag in that model;
+- confirmed UTF-8 handling for `ModCFG.txt` and canonical writer form `CurrentMod=ModA, ModB`;
+- confirmed equal-Priority requirement for `CurrentMod` order to map directly to engine load order;
+- identified a material compatibility discrepancy: the MO2 plugin expects UTF-16+BOM `ModuleInfo.txt` and reads `SectionEng=`, while the current Children of Eltan research template is ASCII-only UTF-8 and uses `Section=OtherMods`;
+- therefore made no unsafe template mutation and did not claim the current skeleton is installable.
 
 ## Checks
 
-- Inspected fresh `master`, README, agent loop, mod architecture, capability matrix, roadmap, project mode, release decision, current `mod/` tree, recent commits, open issues and checkpoint before selecting work.
-- Open GitHub issues at selection time: none.
-- Cross-checked current `mod/templates/ChildrenOfEltan/ModuleInfo.txt` against XenoModKit `module_info.py`, `validation.py`, `textio.py`, and `game_text.py` behavior.
-- Current descriptor remains ASCII-only: `Name=ChildrenOfEltan`, `Section=OtherMods`, `Priority=1`, `Languages=Rus`.
-- No proprietary base-game code/assets or third-party mod files were copied.
-- No XenoMods code/content was imported.
-- `.github/project-mode.json` and `.github/release-decision.json` remain unchanged; standalone WebGL/APK releases remain disabled.
+- Inspected fresh `master` and prior checkpoint before selecting work.
+- Inspected current `mod/templates/ChildrenOfEltan/ModuleInfo.txt`.
+- Inspected `ringill/spacerangers-modorganizer-plugin` repository metadata and current `games/spacerangershd/modcfg.py` source.
+- Source license header: SPDX `MIT`; no third-party code or assets copied.
+- No proprietary base-game code/assets were copied.
 - No WebGL/APK product work was selected.
+- Standalone release freeze remains unchanged.
 
 ## Known blocker
 
-A legally installed, explicitly versioned Space Rangers HD instance is still required to prove the exact `ChildrenOfEltan` activation entry in `ModCFG.txt`, accepted category/module path, final descriptor encoding behavior in the real loader, and clean-game launch/effective-load-order behavior. Static XenoModKit validation cannot substitute for that runtime test.
+A legally installed, explicitly versioned Space Rangers HD instance is still required to resolve the now-explicit `ModuleInfo.txt` compatibility discrepancy (`Section` vs `SectionEng`, ASCII UTF-8 vs UTF-16+BOM), derive the exact `CurrentMod=` entry for the chosen `<Category>/<Mod>` path, and prove clean launch/effective load order.
 
 ## Next recommended increment
 
-On a legally installed, explicitly versioned SRHD build, perform one clean smoke-test of the existing `mod/templates/ChildrenOfEltan/ModuleInfo.txt`: derive the activation entry from the installed game's real `ModCFG.txt`, enable only `ChildrenOfEltan`, verify effective load order/mod UI and clean launch, then record the exact accepted path, activation syntax, encoding and result.
+Inspect real shipped/installed SRHD `ModuleInfo.txt` files (for example the stock `Mods/Tweaks/*` modules) and compare their byte encoding plus category keys against the MO2 plugin contract. Only after that evidence should the Children of Eltan template be converted to a concrete release-safe `ModuleInfo.txt` and paired with an exact `CurrentMod=` activation entry.

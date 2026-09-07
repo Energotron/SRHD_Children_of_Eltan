@@ -1,11 +1,10 @@
-name: Agent Development Gate
+name: Children of Eltan Development Gate
 
 on:
   workflow_dispatch:
   push:
     branches:
       - master
-      - 'agent/**'
   pull_request:
     branches:
       - master
@@ -20,44 +19,48 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate agent context
+      - name: Validate mod-first agent context
         shell: bash
         run: |
           set -euo pipefail
           test -f README.md
           test -f docs/AGENT_DEVELOPMENT_LOOP.md
           test -f docs/PROJECT_CONSTITUTION.md
+          test -f docs/MOD_ARCHITECTURE.md
+          test -f docs/MODDING_CAPABILITY_MATRIX.md
           test -f docs/ROADMAP.md
           test -f docs/GDD.md
           test -f docs/LORE.md
-          test -f game/webgl/index.html
-          test -f game/webgl/js/main.js
-          test -f game/webgl/package.json
-          test -d game/webgl/src
-          test -d game/webgl/test
+          test -f mod/README.md
+          test -f mod/project.json
+          test -f .github/project-mode.json
           test -f .github/release-decision.json
 
-      - name: Validate roadmap, runtime and release intent
+      - name: Validate project mode and release intent
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m json.tool data/diplomacy_rules.json >/dev/null
-          python3 -m json.tool game/webgl/manifest.json >/dev/null
-          node -e "const p=require('./game/webgl/package.json'); if(!p.scripts?.test || !p.scripts?.build) process.exit(1)"
+          python3 -m json.tool mod/project.json >/dev/null
+          python3 -m json.tool .github/project-mode.json >/dev/null
+          python3 -m json.tool .github/release-decision.json >/dev/null
           python3 - <<'PY'
-          import json, re
-          data = json.load(open('.github/release-decision.json', encoding='utf-8'))
-          for key in ('release','tag','title','prerelease','reason','notes'):
-              if key not in data:
-                  raise SystemExit(f'missing release-decision key: {key}')
-          if not isinstance(data['release'], bool) or not isinstance(data['prerelease'], bool):
-              raise SystemExit('release/prerelease must be boolean')
-          if not isinstance(data['notes'], list):
-              raise SystemExit('notes must be an array')
-          if data['release']:
-              if not re.fullmatch(r'v\d+\.\d+\.\d+(?:[-.][0-9A-Za-z.-]+)?', data['tag']):
-                  raise SystemExit('invalid requested release tag')
-              if len(str(data['reason']).strip()) < 12:
-                  raise SystemExit('release=true requires a meaningful reason')
+          import json
+          mode = json.load(open('.github/project-mode.json', encoding='utf-8'))
+          release = json.load(open('.github/release-decision.json', encoding='utf-8'))
+
+          required_mode = {
+              'project_name': 'Дети Эльтана',
+              'project_type': 'space-rangers-2-mod',
+              'canonical_branch': 'master',
+              'canonical_mod_root': 'mod/',
+              'legacy_prototype_status': 'reference-only',
+          }
+          for key, expected in required_mode.items():
+              if mode.get(key) != expected:
+                  raise SystemExit(f'{key}: expected {expected!r}, got {mode.get(key)!r}')
+          if mode.get('standalone_webgl_release') is not False or mode.get('android_apk_release') is not False:
+              raise SystemExit('standalone release modes must remain disabled after the mod pivot')
+          if release.get('release') is not False:
+              raise SystemExit('release must remain frozen until a real KR2 mod package is verified')
           PY
-          echo 'Repository is ready for a full-runtime agent iteration and autonomous release decision.'
+          echo 'Repository is ready for a mod-first Children of Eltan iteration.'

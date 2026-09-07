@@ -9,38 +9,45 @@ Updated: 2026-09-07
 - Canonical mod work: `mod/`, `data/`, `quests/`, mod tooling and current mod architecture docs.
 - `game/webgl/` is legacy/reference only and is no longer the shipping runtime.
 - Standalone WebGL/APK release promotion is frozen.
-- Restored master before this increment: `f20d6607d09fb56b746749e60a54d6fce45179a0`.
+- Restored master before this increment: `e27b55bfd853100e4cfd81d6198f368264aaedf4`.
 
 ## Verified modding/toolchain state
 
-- `Space Rangers HD/Mods/` is confirmed as the filesystem root for user mods by a real distributed SRHD mod and by SRHD XenoModKit deployment semantics.
-- SRHD XenoModKit 0.10.2 is accepted as a `verified-tool-assisted` research/build candidate for structure/ModuleInfo audit, `ModCFG.txt` load-order inspection, DAT, SCR/RSON/RSM, QM/QMM, GI/GAI/HAI/PKG, encoding checks and deterministic release staging.
-- Full activation/load procedure is **not yet considered verified in this repository**: exact minimal `ModuleInfo`, required runtime files, target SRHD build and a clean in-game smoke-test remain open.
-- `ModCFG.txt` is confirmed to participate in active-mod/load-order configuration; XenoModKit reads it but deliberately does not rewrite it automatically.
+- `Space Rangers HD/Mods/` is confirmed as the filesystem root for user mods.
+- Real SRHD layout permits nested module directories such as `Mods/Tweaks/German/ModuleInfo.txt`; therefore the release path must not assume every module is a direct child of `Mods/`.
+- `Mods/ModCFG.txt` is confirmed as the enabled-mod/load-order configuration read by the game, but the exact minimal activation entry for a new `ChildrenOfEltan` module is still not runtime-verified in this repository.
+- `Priority` from `ModuleInfo.txt` participates in effective load order. The textual order in `ModCFG.txt` is only sufficient when relevant mods have equal Priority values.
+- `ModuleInfo.txt` is a real per-module descriptor: XenoModKit requires it for packaging, and official SRHD depot content contains multiple examples under `Mods/Tweaks/...`.
+- SRHD XenoModKit remains accepted as `verified-tool-assisted` for structure/ModuleInfo audit, `ModCFG.txt` compatibility analysis, DAT, SCR/RSON/RSM, QM/QMM, GI/GAI/HAI/PKG, encoding checks and deterministic release staging.
 
 Evidence:
 - https://github.com/Xenomorphchyma/SRHD-XenoModKit
+- https://www.nexusmods.com/spacerangersawarapart/mods/57
+- https://steamdb.info/depot/214731/
 - https://www.moddb.com/mods/rogue-tranclucator
 
 ## Last completed increment
 
-Documented the first verified part of the real SRHD mod path instead of inventing a package layout:
+Verified and documented **SRHD module nesting + load-order semantics** without inventing a runtime package:
 
-- split installation root from activation/load-order status in the capability matrix;
-- classified supported XenoModKit-backed formats as `verified-tool-assisted` while preserving in-game smoke-test boundaries;
-- updated `mod/README.md` so `Mods/` is now the confirmed deployment root but the internal package skeleton remains intentionally unclaimed until tested.
+- corrected the earlier oversimplification that every mod must be a direct child of `Mods/`;
+- documented verified `Mods/<Category>/<Mod>/ModuleInfo.txt` nesting;
+- split activation from load-order semantics;
+- promoted load-order semantics to `verified-moddable` because `ModCFG.txt` order and `ModuleInfo.txt` Priority behavior are independently documented;
+- kept the exact activation entry and minimum `ModuleInfo.txt` field set at `researching` pending a clean in-game smoke-test.
 
 ## Checks
 
-- Documentation-only increment; no proprietary game assets/code added.
-- Existing project/release JSON files were inspected and remain mod-first with standalone releases disabled.
+- Documentation/research-only increment; no proprietary base-game code/assets or third-party mod files were committed.
+- `.github/project-mode.json` and `.github/release-decision.json` were inspected and standalone WebGL/APK releases remain disabled.
+- `mod/` currently contains only repository-internal source metadata/docs (`README.md`, `project.json`); no invented native SRHD skeleton was added.
+- Relevant quest inventory was inspected (`quests/quest_whisper_of_abyss.md`) but content was intentionally not modified because M1 loader verification has higher priority.
 - Open blocking GitHub issues: none found.
-- No standalone WebGL/APK release changes.
 
 ## Known blocker
 
-A legally installed Space Rangers HD instance is required to prove the minimal `ChildrenOfEltan` runtime skeleton, exact `ModuleInfo` fields, `ModCFG.txt` activation entry and clean-game launch behavior. Static tooling alone is not enough to claim this final load path as verified.
+A legally installed Space Rangers HD instance is still required to prove the exact minimal `ChildrenOfEltan` activation entry, accepted `ModuleInfo.txt` keys/values, chosen category/module path and clean-game launch/effective-load-order behavior. Static/public evidence is sufficient for path and ordering semantics, not for claiming our new module is loadable.
 
 ## Next recommended increment
 
-Use SRHD XenoModKit against a clean installed SRHD copy to derive and validate the **smallest legally-clean `ChildrenOfEltan` mod skeleton**: minimal `ModuleInfo` + directory contents + explicit `ModCFG.txt` activation/load-order evidence + successful game smoke-test, then commit only the original skeleton/templates and reproducible validation instructions.
+Derive the **smallest evidence-backed `ModuleInfo.txt` field set** from public format/tool validators and legally inspectable examples, then add only an original `ChildrenOfEltan` template plus a validation recipe; do not claim it runtime-verified until a clean installed SRHD smoke-test succeeds.

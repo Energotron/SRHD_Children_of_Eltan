@@ -15,9 +15,10 @@
 
 | Область | Статус | Подтверждение / что ещё проверить | Реализация в «Детях Эльтана» |
 |---|---|---|---|
-| Файловый корень установки мода | `verified-moddable` | Реальные SRHD-моды устанавливаются как отдельная папка внутри каталога игры `Mods/`; SRHD XenoModKit 0.10.2 также принимает корень `Mods` для `release deploy`/`project deploy`. Источники: `https://github.com/Xenomorphchyma/SRHD-XenoModKit`, `https://www.moddb.com/mods/rogue-tranclucator` | релизный пакет должен разворачиваться в отдельный каталог внутри `Space Rangers HD/Mods/` |
-| Активация / порядок загрузки | `researching` | XenoModKit подтверждает наличие `Mods/ModCFG.txt`, умеет читать effective load order и намеренно не переписывает конфиг. Нужно воспроизводимо подтвердить минимальную запись/активацию на поддерживаемой версии игры и smoke-test запуска. | блокирует первый устанавливаемый пакет |
-| Структура папки мода / ModuleInfo | `researching` | XenoModKit 0.10.2 валидирует структуру мода и `ModuleInfo`, но точный минимальный legally-clean набор файлов для нового пустого мода ещё не воспроизведён в этом репозитории. | следующий шаг M1 — минимальный loadable skeleton |
+| Файловый корень установки мода | `verified-moddable` | Пользовательские моды живут внутри каталога игры `Mods/`. При этом реальная SRHD-структура допускает вложенность `Mods/<Category>/<Mod>/ModuleInfo.txt`, а не только `Mods/<Mod>/`. Это подтверждается актуальным руководством MO2 для SRHD и файлами официального Steam depot. Источники: `https://www.nexusmods.com/spacerangersawarapart/mods/57`, `https://steamdb.info/depot/214731/`, `https://github.com/Xenomorphchyma/SRHD-XenoModKit` | релиз должен разворачиваться под `Space Rangers HD/Mods/`; финальный category path фиксируем только после smoke-test конкретного skeleton |
+| Активация через `ModCFG.txt` | `researching` | Подтверждено, что игра читает `Mods/ModCFG.txt` как список включённых модов; XenoModKit и MO2 умеют анализировать effective load order. Но точный минимальный legally-clean текст записи для нового `ChildrenOfEltan` ещё не воспроизведён на установленной игре. | блокирует первый устанавливаемый пакет |
+| Семантика порядка загрузки | `verified-moddable` | Порядок строк в `ModCFG.txt` влияет на load order только при одинаковом `Priority`; значение `Priority` берётся из `ModuleInfo.txt` и может изменить фактический порядок. Актуальный SRHD MO2-plugin нормализует `Priority=1`, чтобы порядок `ModCFG.txt` совпадал с видимым порядком модов. Источник: `https://www.nexusmods.com/spacerangersawarapart/mods/57` | для первого skeleton использовать один явно зафиксированный `Priority` после проверки допустимого минимального `ModuleInfo` |
+| Структура папки мода / `ModuleInfo.txt` | `researching` | Наличие `ModuleInfo.txt` в корне конкретного модуля подтверждено XenoModKit и официальными файлами SRHD (`Mods/Tweaks/German/ModuleInfo.txt`, `Mods/Tweaks/LeoDomikShipsUpdate15/ModuleInfo.txt` и др.). XenoModKit требует `ModuleInfo.txt` для упаковки. Точный минимальный набор ключей/значений для нового пустого мода всё ещё требует воспроизводимого runtime-теста. | следующий шаг M1 — вывести минимальный оригинальный `ModuleInfo.txt` из проверенных полей и подтвердить его в игре |
 | Тексты/локализация | `researching` | XenoModKit подтверждает аудит кодировок и работу с языковыми DAT/TXT, но конкретная точка override для нашего пакета ещё не проверена в игре. | диалоги, новости, описания, лор |
 | Квесты | `verified-tool-assisted` | SRHD XenoModKit читает QM 2/3/4 и QMM 6/7, экспортирует JSON, собирает QMM 7 и делает round-trip; игровой smoke-test конкретного квеста всё равно обязателен. | главная сюжетная кампания и побочные цепочки |
 | Игровые таблицы/баланс | `verified-tool-assisted` | BlockPar DAT подтверждён через XenoModKit + BlockParEditor 2.1; конкретные таблицы и override-точки для предметов/баланса ещё требуют исследования. | оборудование, цены, награды, параметры |
@@ -36,11 +37,23 @@
 
 ## Проверенный toolchain-кандидат
 
-**SRHD XenoModKit 0.10.2** (`Xenomorphchyma/SRHD-XenoModKit`) — публичный headless-набор инструментов для Space Rangers HD. Для M1 он рассматривается как `verified-tool-assisted` источник по структуре/аудиту мода и поддерживаемым форматам, но не как доказательство конкретной игровой механики без smoke-test в SRHD.
+**SRHD XenoModKit** (`Xenomorphchyma/SRHD-XenoModKit`) — публичный headless-набор инструментов для Space Rangers HD. Для M1 он рассматривается как `verified-tool-assisted` источник по структуре/аудиту мода и поддерживаемым форматам, но не как доказательство конкретной игровой механики без smoke-test в SRHD.
 
-Подтверждённые им области, полезные проекту: структура мода и `ModuleInfo`, `ModCFG.txt`/load-order audit, DAT, SCR/RSON/RSM, QM/QMM, GI/GAI/HAI/PKG, кодировки, детерминированная release-сборка и deploy в заданный корень `Mods`.
+Подтверждённые им области, полезные проекту: структура мода и `ModuleInfo.txt`, `ModCFG.txt`/load-order audit, DAT, SCR/RSON/RSM, QM/QMM, GI/GAI/HAI/PKG, кодировки, детерминированная release-сборка и deploy в заданный корень `Mods`.
 
 Ключевая граница: статическая проверка и успешная сборка формата не заменяют запуск в игре. Любой новый контент получает окончательную совместимость только после smoke-test на явно зафиксированной версии Space Rangers HD.
+
+## Новое подтверждение layout/load-order (2026-09-07)
+
+Публичное руководство **Mod Organizer 2 for Space Rangers HD** (обновлено 17 августа 2026) документирует две важные особенности реального загрузчика SRHD:
+
+1. Игра читает список включённых модов из `Mods/ModCFG.txt`.
+2. Физический мод может находиться как `Mods/<Category>/<Mod>/ModuleInfo.txt`; следовательно правило «одна непосредственная подпапка `Mods` = один мод» для SRHD неверно.
+3. `Priority` из `ModuleInfo.txt` участвует в фактическом load order; порядок строк `ModCFG.txt` сам по себе не гарантирует порядок загрузки при разных Priority.
+
+Наличие именно такой вложенной структуры независимо видно в официальном Steam depot SRHD: `Mods/Tweaks/German/ModuleInfo.txt`, `Mods/Tweaks/LeoDomikShipsUpdate15/ModuleInfo.txt`, `Mods/Tweaks/LeoDomikShipsUpdate30/ModuleInfo.txt` и другие штатно поставляемые модули.
+
+Это повышает **семантику load order** до `verified-moddable`, но **не** повышает саму активацию нашего нового мода до verified: ещё нужны точная запись `ModCFG.txt`, минимальные поля `ModuleInfo.txt`, версия игры и чистый runtime smoke-test.
 
 ## Правило обновления
 
@@ -48,4 +61,4 @@
 
 ## Следующая цель
 
-Подтвердить **активацию минимального пустого мода через `Mods/ModCFG.txt` + минимальный `ModuleInfo`/структуру пакета** на конкретной поддерживаемой сборке SRHD и зафиксировать smoke-test: чистая игра → подключение каталога `ChildrenOfEltan` → запуск без ошибок → мод присутствует в effective load order.
+Вывести из публичных проверенных модов/инструментов **точный минимальный набор ключей `ModuleInfo.txt` без копирования чужого текста**, создать оригинальный шаблон `ChildrenOfEltan` и затем подтвердить его на установленной SRHD вместе с одной явной записью в `ModCFG.txt` и effective load order.

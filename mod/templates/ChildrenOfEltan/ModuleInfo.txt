@@ -1,0 +1,4 @@
+Name=ChildrenOfEltan
+Section=OtherMods
+Priority=1
+Languages=Rus

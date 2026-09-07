@@ -105,6 +105,37 @@ test('new-game bridge reaches canonical date without destroying the previous sav
   assert.equal(storage.getItem('kr3_save_meta'), oldMeta);
 });
 
+test('new-game bridge preserves selected race and ranger class', () => {
+  const storage = memoryStorage({ kr3_active_save_slot: '0' });
+  const selection = { raceId: 'gaal', classId: 'warrior' };
+  let receivedSelection = null;
+  let loadedProfile = null;
+  const win = {
+    localStorage: storage,
+    document: { getElementById() { return null; } },
+  };
+  const originals = {
+    startNewGame(profileSelection) {
+      receivedSelection = profileSelection;
+    },
+    saveGame() {
+      storage.setItem('kr3_save_slot0', JSON.stringify({
+        dateStr: '01.01.3500',
+        G: { date: { year: 3500, month: 1, day: 1 } },
+        P: { raceId: receivedSelection.raceId, classId: receivedSelection.classId },
+      }));
+    },
+    loadGame() {
+      loadedProfile = JSON.parse(storage.getItem('kr3_save_slot0')).P;
+      return true;
+    },
+  };
+
+  assert.equal(runCanonicalNewGame(win, originals, selection), true);
+  assert.deepEqual(receivedSelection, selection);
+  assert.deepEqual(loadedProfile, selection);
+});
+
 test('autostart is consumed before main.js can bypass the canonical new-game bridge', () => {
   let replaced = null;
   const win = {

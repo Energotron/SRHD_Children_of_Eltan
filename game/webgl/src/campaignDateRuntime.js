@@ -184,7 +184,7 @@ function refreshContinueLabel(win) {
   btn.textContent = `💾 ПРОДОЛЖИТЬ (${meta.dateStr || '—'})`;
 }
 
-export function runCanonicalNewGame(win, originals) {
+export function runCanonicalNewGame(win, originals, profileSelection = {}) {
   const storage = win?.localStorage;
   if (!storage || typeof originals?.startNewGame !== 'function' || typeof originals?.saveGame !== 'function' || typeof originals?.loadGame !== 'function') return false;
 
@@ -192,7 +192,7 @@ export function runCanonicalNewGame(win, originals) {
   const keys = new Set(['kr3_save_slot0', 'kr3_save_meta', saveKey(slot), metaKey(slot)]);
   const snapshot = snapshotKeys(storage, keys);
 
-  originals.startNewGame();
+  originals.startNewGame(profileSelection);
   originals.saveGame(0);
   migrateSlot(storage, 0);
   originals.loadGame(0);
@@ -252,7 +252,7 @@ export function installCampaignDateRuntime(win = globalThis?.window) {
 
   win.addEventListener?.('load', () => {
     resolveOriginals();
-    if (originals.startNewGame) win.startNewGame = () => runCanonicalNewGame(win, originals);
+    if (originals.startNewGame) win.startNewGame = profileSelection => runCanonicalNewGame(win, originals, profileSelection);
     if (originals.loadGame) win.loadGame = () => runCanonicalLoad(win, originals);
     if (autostartRequested && originals.startNewGame && originals.saveGame && originals.loadGame) {
       runCanonicalNewGame(win, originals);

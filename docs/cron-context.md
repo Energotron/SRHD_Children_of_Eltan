@@ -9,7 +9,7 @@ Updated: 2026-09-07
 - Canonical mod work: `mod/`, `data/`, `quests/`, mod tooling, asset tooling, and mod-first architecture docs.
 - `game/webgl/` is legacy/reference only and is not the shipping runtime.
 - Standalone WebGL/APK release promotion remains frozen.
-- Master after evidence commit: `6254919b66921df62bf954522298d3a2432db62c` before checkpoint update.
+- Master parent for this increment: `a7c5066ba468cfb6b19f205229b186ca2716d5b3`.
 
 ## Verified modding/toolchain state
 
@@ -17,16 +17,19 @@ Updated: 2026-09-07
 - Real SRHD modules may use nested layout `Mods/<Category>/<Mod>/ModuleInfo.txt` rather than only direct children of `Mods/`.
 - Official Steam depot examples include `Mods/Tweaks/German/ModuleInfo.txt`, `Mods/Tweaks/LeoDomikShipsUpdate15/ModuleInfo.txt`, `Mods/Tweaks/LeoDomikShipsUpdate30/ModuleInfo.txt`, `Mods/Tweaks/SR2LoadingScreen/ModuleInfo.txt`, `Mods/Tweaks/SR2PQuestStyle/ModuleInfo.txt`, and `Mods/Tweaks/Spanish/ModuleInfo.txt`.
 - `ModCFG.txt` activation syntax is `verified-tool-assisted`: the current MIT-licensed SRHD Mod Organizer 2 plugin documents `Mods/ModCFG.txt` with a `CurrentMod=` key containing an ordered comma-separated enabled-mod list.
-- **Nested `CurrentMod` token shape is now `verified-moddable`.** Public Molder's Mods instructions use `CurrentMod=OtherMods\MolderHulls,OtherMods\MolderMM`, while a public SRHD runtime log from build `2.1.2468` records `CurrentMod=ShusRangers\ShuEmitter`. Together with the documented `Mods/<Category>/<Mod>/ModuleInfo.txt` layout, this verifies the token form `<Category>\<Mod>` and comma-separated composition for multiple enabled modules.
+- Nested `CurrentMod` token shape is `verified-moddable`: public Molder's Mods instructions use `CurrentMod=OtherMods\MolderHulls,OtherMods\MolderMM`, while a public SRHD runtime log from build `2.1.2468` records `CurrentMod=ShusRangers\ShuEmitter`.
 - `Priority` from `ModuleInfo.txt` participates in effective load order. `CurrentMod` order maps directly only when enabled modules have equal priority; MO2 normalizes enabled modules to `Priority=1` in its VFS for deterministic ordering.
-- The exact Children of Eltan category remains `researching`; therefore the final concrete token (for example `OtherMods\ChildrenOfEltan`) is not yet promoted to release contract even though the identifier shape itself is verified.
-- `ModuleInfo.txt` release-safe encoding/category keys remain `researching`: XenoModKit accepts several encodings statically, while the current MO2 plugin expects UTF-16+BOM and reads `SectionEng=` for category identity. Do not promote the current research template to installable status yet.
+- The exact Children of Eltan category remains `researching`; the final concrete token is not yet promoted to release contract.
+- **`Section` + `SectionEng` coexistence/derivation is now `verified-tool-assisted`.** GPL-3.0 `jaroslavknotek/SRHD-lang-dat-translate` preserves `Section` and creates `SectionEng=<parent category folder>` during its SRHD module translation flow. Its test fixture asserts exactly one `SectionEng` equal to the parent category. README documents use across a broad Evolution/Expansion/Revolution/ShusRangers/OtherMods/Tweaks mod set.
+- This resolves the previous false either/or interpretation: `SectionEng` evidence does not justify deleting `Section`. It does **not** yet resolve exact game-facing encoding/BOM or prove that `SectionEng` is mandatory for a Russian-only module.
+- `ModuleInfo.txt` release-safe encoding remains `researching`: XenoModKit accepts several encodings statically, while the current MO2 plugin expects UTF-16+BOM. Do not promote the current UTF-8 research template to installable status yet.
 - XenoModKit remains `verified-tool-assisted` for mod structure audit, ModuleInfo/ModCFG analysis, DAT, SCR/RSON/RSM, QM/QMM, GI/GAI/HAI/PKG, encoding checks, deterministic release staging and native-plugin validation.
-- XenoNativeLoader Host API V1 remains `verified-tool-assisted` as an optional advanced extension path. It is not the default path for mechanics already supported by SRHD data/script systems.
+- XenoNativeLoader Host API V1 remains `verified-tool-assisted` as an optional advanced extension path, not the default path for mechanics already supported by SRHD data/script systems.
 
 Evidence:
 - `docs/evidence/2026-09-07-srhd-modcfg-layout.md`
 - `docs/evidence/2026-09-07-currentmod-token-shape.md`
+- `docs/evidence/2026-09-07-moduleinfo-sectioneng-semantics.md`
 - https://github.com/ringill/spacerangers-modorganizer-plugin
 - https://www.nexusmods.com/spacerangersawarapart/mods/57
 - https://steamdb.info/depot/214731/
@@ -34,36 +37,39 @@ Evidence:
 - https://steamcommunity.com/app/214730/discussions/0/4363500699215030060/
 - https://github.com/Xenomorphchyma/SRHD-XenoModKit
 - https://github.com/Xenomorphchyma/XenoMods
+- https://github.com/jaroslavknotek/SRHD-lang-dat-translate
 
 ## Asset pipeline state
 
 - GI↔PNG and supported GAI/PKG tooling remain `verified-tool-assisted` through XenoModKit.
-- No asset was generated in this increment because no new runtime-verified import point was required.
-- Generated assets must remain original/license-clean and must be validated for the exact SRHD target format before inclusion.
+- No asset was generated in this increment because no newly verified asset import point was involved.
+- Generated assets must remain original/license-clean and validated for the exact SRHD target format before inclusion.
 
 ## Last completed increment
 
-Verified the exact **nested `CurrentMod` identifier shape** used by real SRHD mods:
+Verified a specific **`ModuleInfo.txt` localization/category pattern** against an independent SRHD community toolchain:
 
-- confirmed `<Category>\<Mod>` from public Molder's Mods activation instructions;
-- independently confirmed the same shape from an actual SRHD runtime log (`ShusRangers\ShuEmitter`);
-- retained comma-separated composition for multiple enabled modules;
-- classified this specific loader capability as `verified-moddable`;
-- documented the evidence in `docs/evidence/2026-09-07-currentmod-token-shape.md`;
-- deliberately did not mutate `mod/templates/ChildrenOfEltan/ModuleInfo.txt`, because its final category and release-safe encoding remain unresolved.
+- inspected `jaroslavknotek/SRHD-lang-dat-translate` (GPL-3.0, archived public repository, master tree `05b3f4f72029336b5f0a5a5aada22a6806897d22`);
+- confirmed its translator preserves `Section` and derives `SectionEng` from the parent category folder;
+- confirmed the repository test requires exactly one `SectionEng` with that category value;
+- recorded the pattern as `verified-tool-assisted` rather than engine-native;
+- documented why this resolves the `Section` vs `SectionEng` either/or conflict without claiming the byte encoding is solved;
+- deliberately left `mod/templates/ChildrenOfEltan/ModuleInfo.txt` unchanged.
 
 ## Checks
 
-- Inspected fresh `master`, recent commits, open issues, README, agent loop, current capability matrix, release freeze, template `ModuleInfo.txt`, and checkpoint before selecting work.
-- Cross-checked independent public mod instructions, a real SRHD runtime log, the current SRHD MO2 guide/plugin model, and official nested module layout evidence.
-- No WebGL/APK work selected.
-- No proprietary base-game code/assets or unclear-license mod content copied.
-- No asset/mechanic implementation was attempted beyond the verified loader-contract increment.
+- Inspected fresh `master` (`a7c5066ba468cfb6b19f205229b186ca2716d5b3`) and recent commits.
+- Open issues: none.
+- Inspected README, `docs/AGENT_DEVELOPMENT_LOOP.md`, `docs/MOD_ARCHITECTURE.md`, `docs/MODDING_CAPABILITY_MATRIX.md`, `docs/ROADMAP.md`, `.github/project-mode.json`, `.github/release-decision.json`, checkpoint, `mod/`, current `ModuleInfo.txt`, `data/`, `quests/`, lore, and current mod-first validation workflow.
+- Inspected external `SRHD-lang-dat-translate` source, tests, README/tool purpose, repository state and GPL-3.0 license.
+- No third-party code, game binaries, proprietary assets, or third-party mod content copied.
+- No WebGL/APK work selected; standalone release freeze remains unchanged.
+- No asset or mechanic implementation attempted in this evidence-only increment.
 
 ## Known blocker
 
-A real shipped/installed SRHD `ModuleInfo.txt` artifact is still required to resolve the exact release-safe encoding and category keys (`Section` vs `SectionEng`). Until that is proven, the project should not lock the final Children of Eltan category folder or promote the research template to installable status.
+A real shipped/installed SRHD `ModuleInfo.txt` artifact is still required to resolve exact release-safe byte encoding/BOM and determine which localized category fields are engine-required versus tool-convenience. Runtime acceptance still requires a pinned SRHD smoke-test.
 
 ## Next recommended increment
 
-Inspect one real shipped SRHD `ModuleInfo.txt` byte-for-byte (preferably a stock `Mods/Tweaks/*` module), record BOM/encoding and category/name keys, then update the Children of Eltan research template only if that primary evidence resolves the `Section` vs `SectionEng` and UTF-8 vs UTF-16 discrepancy.
+Acquire one real shipped/installed SRHD `Mods/Tweaks/*/ModuleInfo.txt` as a byte-level artifact and record BOM/encoding plus `Section`, `SectionEng`, `Name` and `Priority` before mutating the Children of Eltan template.

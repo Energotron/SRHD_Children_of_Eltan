@@ -19,6 +19,7 @@
 | Активация через `ModCFG.txt` | `researching` | Подтверждено, что игра читает `Mods/ModCFG.txt` как список включённых модов; XenoModKit и MO2 умеют анализировать effective load order. Но точный минимальный legally-clean текст записи для нового `ChildrenOfEltan` ещё не воспроизведён на установленной игре. | блокирует первый устанавливаемый пакет |
 | Семантика порядка загрузки | `verified-moddable` | Порядок строк в `ModCFG.txt` влияет на load order только при одинаковом `Priority`; значение `Priority` берётся из `ModuleInfo.txt` и может изменить фактический порядок. Актуальный SRHD MO2-plugin нормализует `Priority=1`, чтобы порядок `ModCFG.txt` совпадал с видимым порядком модов. Источник: `https://www.nexusmods.com/spacerangersawarapart/mods/57` | для первого skeleton использовать один явно зафиксированный `Priority` после проверки допустимого минимального `ModuleInfo` |
 | Структура папки мода / `ModuleInfo.txt` | `researching` | Наличие `ModuleInfo.txt` в корне конкретного модуля подтверждено XenoModKit и официальными файлами SRHD (`Mods/Tweaks/German/ModuleInfo.txt`, `Mods/Tweaks/LeoDomikShipsUpdate15/ModuleInfo.txt` и др.). XenoModKit требует `ModuleInfo.txt` для упаковки. Точный минимальный набор ключей/значений для нового пустого мода всё ещё требует воспроизводимого runtime-теста. | следующий шаг M1 — вывести минимальный оригинальный `ModuleInfo.txt` из проверенных полей и подтвердить его в игре |
+| `ModuleInfo.txt` — `Section` + `SectionEng` coexistence | `verified-tool-assisted` | GPL-3.0 community tool `jaroslavknotek/SRHD-lang-dat-translate` preserves `Section` and adds `SectionEng=<parent category folder>` when translating real SRHD mod layouts; its test asserts exactly one `SectionEng` equal to the parent category. README reports use across large Evolution/Expansion/Revolution/ShusRangers/OtherMods/Tweaks sets. Evidence: `docs/evidence/2026-09-07-moduleinfo-sectioneng-semantics.md`. This does not resolve engine-required encoding/BOM or whether `SectionEng` is mandatory for a Russian-only module. | не удалять `Section` из research template; финальный `SectionEng` добавлять только после фиксации категории и byte-level/runtime проверки |
 | Тексты/локализация | `researching` | XenoModKit подтверждает аудит кодировок и работу с языковыми DAT/TXT, но конкретная точка override для нашего пакета ещё не проверена в игре. | диалоги, новости, описания, лор |
 | Квесты | `verified-tool-assisted` | SRHD XenoModKit читает QM 2/3/4 и QMM 6/7, экспортирует JSON, собирает QMM 7 и делает round-trip; игровой smoke-test конкретного квеста всё равно обязателен. | главная сюжетная кампания и побочные цепочки |
 | Игровые таблицы/баланс | `verified-tool-assisted` | BlockPar DAT подтверждён через XenoModKit + BlockParEditor 2.1; конкретные таблицы и override-точки для предметов/баланса ещё требуют исследования. | оборудование, цены, награды, параметры |
@@ -56,6 +57,14 @@
 
 Это повышает **семантику load order** до `verified-moddable`, но **не** повышает саму активацию нашего нового мода до verified: ещё нужны точная запись `ModCFG.txt`, минимальные поля `ModuleInfo.txt`, версия игры и чистый runtime smoke-test.
 
+## Новое подтверждение `Section` / `SectionEng` (2026-09-07)
+
+Публичный GPL-3.0 инструмент **`jaroslavknotek/SRHD-lang-dat-translate`** даёт независимое community-toolchain подтверждение семантики локализованной категории модуля. В `python/app.py` исходный `Section` сохраняется, а `SectionEng` добавляется как имя родительской category-папки (`module_info_path.parent.parent.name`). Тест `tests/test_app.py` воспроизводит `ModSection/TestMod/ModuleInfo.txt` и требует ровно один `SectionEng=ModSection`.
+
+README инструмента сообщает практическое применение на крупном наборе модов Evolution, Expansion, Revolution, ShusRangers, OtherMods и Tweaks. Это переводит именно **coexistence/derivation pattern `Section` + `SectionEng`** в `verified-tool-assisted`, но не доказывает release-safe byte encoding и не делает `SectionEng` engine-required для любого языкового набора.
+
+Источник и границы доказательства зафиксированы в `docs/evidence/2026-09-07-moduleinfo-sectioneng-semantics.md`.
+
 ## Новое подтверждение native-extension path (2026-09-07)
 
 Актуальный **SRHD XenoModKit 0.10.2** добавляет статически проверяемый путь нативного расширения через **XenoNativeLoader Host API V1**: шаблон проекта, MSVC x86 build, PE32/ABI validation, manifest/config discovery и проверку точных экспортов `XenoPlugin_Query` / `XenoPlugin_Initialize`.
@@ -70,4 +79,4 @@
 
 ## Следующая цель
 
-Вывести из публичных проверенных модов/инструментов **точный минимальный набор ключей `ModuleInfo.txt` без копирования чужого текста**, создать оригинальный шаблон `ChildrenOfEltan` и затем подтвердить его на установленной SRHD вместе с одной явной записью в `ModCFG.txt` и effective load order.
+Получить **byte-level первичный артефакт реального shipped/installed SRHD `ModuleInfo.txt`**: BOM/encoding, `Section`, `SectionEng`, `Name`, `Priority` и затем провести smoke-test оригинального Children of Eltan skeleton на зафиксированной версии SRHD.
